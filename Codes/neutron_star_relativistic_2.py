@@ -13,13 +13,13 @@ mn = 938.926                # Mass of neutron in MeV c^-2
 # Defining the functions
 
 # Function for determining initial value of n(r=0)
-def initial_n():          
+def initial_n():
     n = 1
     err = 1
     tol = 1e-15
     count = 0
     # Newton-Raphson method
-    while err > tol : 
+    while err > tol :
         count += 1
         fn = n*mn + 236*n**(2.54) - rho_s
         dfn = mn + 236*2.54*n**(1.54)
@@ -28,57 +28,57 @@ def initial_n():
         n = temp
     print ("Newton-Raphson Converged after ", count, "iterations")
     return n
-    
-    
+
+
 def rho(p):
     n = (p*rho_s/363.44)**(1./2.54)
-    return (236. * n**2.54 + n *mn)/rho_s 
-    
+    return (236. * n**2.54 + n *mn)/rho_s
+
 
 def dp_dr(r,m,p,flag):
     if flag == 0:                              # classical model
         y = -m*rho(p)/(r**2 + 1e-20)
     else:                                      # relativistic model
-        rh = rho(p)                            
+        rh = rho(p)
         y = -(p+rh)*(p*r**3 + m)/(r**2 - 2*m*r + 1e-20)
     return y
 
 def dm_dr(r,m,p):
     return rho(p)*r**2
-    
+
 
 def EulerSolver(r,m,p,h,flag):
     y = np.zeros(2)
     y[0] = m + dm_dr(r,m,p)*h
     y[1] = p + dp_dr(r,m,p,flag)*h
     return y
-    
+
 def RK4Solver(r,m,p,h,flag):
     y = np.zeros(2)
     k11 = dm_dr(r,m,p)
     k21 = dp_dr(r,m,p,flag)
-    
+
     k12 = dm_dr(r+0.5*h,m+0.5*k11*h,p+0.5*k21*h)
     k22 = dp_dr(r+0.5*h,m+0.5*k11*h,p+0.5*k21*h,flag)
-    
+
     k13 = dm_dr(r+0.5*h,m+0.5*k12*h,p+0.5*k22*h)
     k23 = dp_dr(r+0.5*h,m+0.5*k12*h,p+0.5*k22*h,flag)
-    
-    k14 = dm_dr(r+h,m+h*k13,p+h*k23)    
-    k24 = dp_dr(r+h,m+h*k13,p+h*k23,flag)    
-    
+
+    k14 = dm_dr(r+h,m+h*k13,p+h*k23)
+    k24 = dp_dr(r+h,m+h*k13,p+h*k23,flag)
+
     y[0] = m + h*(k11 + 2.*k12 + 2.*k13 + k14)/6.
     y[1] = p + h*(k21 + 2.*k22 + 2.*k23 + k24)/6.
     return y
-    
-    
+
+
 def mplot(fign,x,y,xl,yl,clr,lbl,ttl):
     py.figure(fign)
-    py.xlabel(xl)    
+    py.xlabel(xl)
     py.ylabel(yl)
     py.title(ttl)
     return py.plot(x,y,clr, linewidth =2.0,label = lbl)
- 
+
 
 
 
@@ -115,18 +115,18 @@ for glb in range(1,Np):
     m = np.zeros(N)
     p = np.zeros(N)
     rh = np.zeros(N)
-       
+
     r[0] = 0
     m[0] = 0
     rh[0] = 1
-    
+
     rho_s = rho_s_set[glb]
     M0 = (4*np.pi*(G**3)*rho_s)**(-0.5)
     R0 = G*M0
     ni = initial_n()
 
     p[0] = 363.44 * (ni**2.54)/rho_s
-    
+
     for k in range(0,2):
         flag = flag_set[k]
         for i in range(0,N-1):
@@ -143,9 +143,9 @@ for glb in range(1,Np):
             print ("Program didn't converge to P = 0, extend the maximum value of r")
         else:
             print ("P <", tol, "found after", i, "runs")
-        
-            
-               
+
+
+
         if flag == 0:
             lbl = "Classical Model"
             clr = "green"
@@ -159,7 +159,7 @@ for glb in range(1,Np):
         print ("Initial density, rho_s = ", rho_s, "MeV/fm3")
         print ("Total mass = ", mf[flag, glb], "times Solar mass")
         print ("Radius of the Neutron star = ", rf[flag, glb], "km")
-    
+
 
 mplot(1,rf[0,:],mf[0,:],'radius (km)','mass (solar mass)','green','Classical Model', "Classical model")
 q = py.legend(loc = 0)
@@ -167,6 +167,3 @@ q.draw_frame(False)
 mplot(2,rf[1,:],mf[1,:],'radius (km)','mass (solar mass)','blue','Relativistic Model', "Relativistic model")
 q = py.legend(loc = 0)
 q.draw_frame(False)
-
-
-
